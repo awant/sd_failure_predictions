@@ -20,3 +20,9 @@
 9. [Anomaly detection using SMART indicators for hard disk drive failure prediction](https://www.etran.rs/common/pages/proceedings/IcETRAN2017/RTI/IcETRAN2017_paper_RTI1_6.pdf), 2017
 
 10. [Failure Trends in a Large Disk Drive Population](https://static.googleusercontent.com/media/research.google.com/en//archive/disk_failures.pdf), 2007
+
+11. [Improving Service Availability of Cloud Systems by Predicting Disk Error](https://www.usenix.org/system/files/conference/atc18/atc18-xu-yong.pdf), 2018
+
+12. [Proactive error prediction to improve storage system reliability](https://www.usenix.org/system/files/conference/atc17/atc17-mahdisoltani.pdf), 2017
+
+13. [A PROACTIVE DRIVE RELIABILITY MODEL TO PREDICT FAILURES IN THE HARD DISK DRIVES](http://www.iraj.in/journal/journal_file/journal_pdf/3-78-140957031862-68.pdf), 2014
