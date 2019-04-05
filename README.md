@@ -1,4 +1,16 @@
 
+## Hard drive failure prediction based on S.M.A.R.T. attributes
+
+### Main goal of the research
+
+The purpose of this repository is:
+
+1. To reproduce results from articles on the same dataset
+
+2. To compare results. Create pivot tables
+
+3. To create the most accurate model
+
 # Articles
 
 1. [Predictive models of hard drive failures based on operational data](https://hal.archives-ouvertes.fr/hal-01703140/document), 2018
@@ -26,3 +38,16 @@
 12. [Proactive error prediction to improve storage system reliability](https://www.usenix.org/system/files/conference/atc17/atc17-mahdisoltani.pdf), 2017
 
 13. [A PROACTIVE DRIVE RELIABILITY MODEL TO PREDICT FAILURES IN THE HARD DISK DRIVES](http://www.iraj.in/journal/journal_file/journal_pdf/3-78-140957031862-68.pdf), 2014
+
+### Dataset
+
+At the time of the research there was data from BackBlaze up to 2018 year.
+Lets take data from 2015 to 2018 year. Test data is data from 4th quarter of 2018 year.
+
+### Metrics
+
+Main metrics are FAR and FDR. These metrics are very popular in hard drive prediction applications.
+
+### Articles analysis
+
+7. Predicting Disk Replacement towards Reliable Data Centers
