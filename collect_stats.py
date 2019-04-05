@@ -8,6 +8,17 @@ import pandas as pd
 YearPath = namedtuple('YearPath', ['year', 'path'])
 
 
+def iget_next_file(folder, ext=None):
+    if ext is not None:
+        if ext[0] != '.':
+            raise RuntimeError("extention should start with '.'")
+    for dirpath, dnames, fnames in os.walk(folder):
+        for filename in fnames:
+            if ext is not None and filename[-len(ext):] != ext:
+                continue
+            yield filename, os.path.join(dirpath, filename)
+
+
 class SerialNumber(object):
     def __init__(self, serial_number, first_seen):
         self.serial_number = serial_number
@@ -87,23 +98,18 @@ def get_dirs_with_years(folder):
 def iget_next_csv(folder):
     years_directories = get_dirs_with_years(folder)  # sorted by year
     for year_path in years_directories:
-        path = year_path.path
-        filenames = sorted(filter(lambda x: x[-4:] == '.csv' and x[:4].isdigit(), os.listdir(path)))
-        yield from map(lambda filename: (filename[:-4], os.path.join(path, filename)), filenames)
+        yield from sorted(list(iget_next_file(path, '.csv')))
 
 
 def collect_stats(folder):
     # year, model, serial_number, first_time_seen, last_time_seen, failure, failure_date
     stats_by_year = defaultdict(SDStats)
-    for date, csv_filepath in tqdm(iget_next_csv(folder)):
-        print('csv_filepath', csv_filepath)
-        year = int(date[:4])
+    for csv_filename, csv_filepath in tqdm(iget_next_csv(folder)):
+        year = int(csv_filename[:4])
         df = pd.read_csv(csv_filepath)
         for index, sample in df.iterrows():
             stats_by_year[year].add(sample)
-        del df  # python gc is shit
-        if date > '2015-01-06':
-            break
+        del df
     return stats_by_year
 
 
