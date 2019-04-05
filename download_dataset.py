@@ -17,17 +17,17 @@ class BackBlaze(object):
             2018: [1, 2, 3, 4]
     }
 
-    def __init__(self, folder, years=[], with_stats=False):
+    def __init__(self, folder, years=[]):
         self.folder = folder
         self.years = years
-        self._compute_stats = with_stats
         self._check_years()
         self._prepare_folder()
 
     def _prepare_folder(self):
         if os.path.exists(self.folder):
             print("Warning: Folder {} exists".format(self.folder))
-        os.makedirs(self.folder)
+        else:
+            os.makedirs(self.folder)
 
     def _check_years(self):
         for year in self.years:
@@ -51,9 +51,12 @@ class BackBlaze(object):
             for data in tqdm(response.iter_content(chunk_size=256*1024*1024)):
                 f.write(data)
 
-    def _unzip_file(self, filepath):
+    def _unzip_file(self, filepath, tgt_folder):
+        tgt_folder = os.path.join(self.folder, tgt_folder)
+        if not os.path.exists(tgt_folder):
+            os.makedirs(tgt_folder)
         with zipfile.ZipFile(filepath, 'r') as zip_ref:
-            zip_ref.extractall(path=self.folder)
+            zip_ref.extractall(path=tgt_folder)
 
     def _get_times(self):
         times = []
@@ -63,34 +66,28 @@ class BackBlaze(object):
             times += [(year, q) for q in qs]
         return times
 
-    def _compute_statistics(self):
-        raise RuntimeError("TODO:")
-
     def load(self):
         times = self._get_times()
         for year, q in tqdm(times, total=len(times), desc='Downloading files'):
             url = self._form_url(year, q)
             zipfilepath = self._form_zipfilepath(year, q)
             self._download_file(url, zipfilepath)
-            self._unzip_file(zipfilepath)
+            self._unzip_file(zipfilepath, str(year))
             os.remove(zipfilepath)
-        if self._compute_stats:
-            self._compute_statistics()
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process arguments')
     parser.add_argument('--backblaze', action='store_true')
     parser.add_argument('--tgt_folder', type=str, default='data')
-    parser.add_argument('-y', '--year', nargs='+', type=int, required=True)
-    parser.add_argument('--with_stats', action='store_true')
+    parser.add_argument('-y', '--year', type=int, action='append', required=True)
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_arguments()
     if args.backblaze:
-        storage = BackBlaze(args.tgt_folder, years=args.year, with_stats=args.with_stats)
+        storage = BackBlaze(args.tgt_folder, years=args.year)
     else:
         raise RuntimeError("A storage is unknown")
     storage.load()
