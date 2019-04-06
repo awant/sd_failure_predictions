@@ -14,6 +14,8 @@ def iget_next_file(folder, ext=None):
             raise RuntimeError("extention should start with '.'")
     for dirpath, dnames, fnames in os.walk(folder):
         for filename in fnames:
+            if filename[0] in ['_', '.']:
+                continue
             if ext is not None and filename[-len(ext):] != ext:
                 continue
             yield filename, os.path.join(dirpath, filename)
@@ -98,7 +100,7 @@ def get_dirs_with_years(folder):
 def iget_next_csv(folder):
     years_directories = get_dirs_with_years(folder)  # sorted by year
     for year_path in years_directories:
-        yield from sorted(list(iget_next_file(path, '.csv')))
+        yield from sorted(list(iget_next_file(year_path.path, '.csv')))
 
 
 def collect_stats(folder):
