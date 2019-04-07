@@ -103,43 +103,52 @@ def iget_next_csv(folder):
         yield from sorted(list(iget_next_file(year_path.path, '.csv')))
 
 
-def collect_stats(folder):
+def icollect_stats(folder, years=None):
     # year, model, serial_number, first_time_seen, last_time_seen, failure, failure_date
-    stats_by_year = defaultdict(SDStats)
+    current_year, stats_by_year = None, SDStats()
     for csv_filename, csv_filepath in tqdm(iget_next_csv(folder)):
         year = int(csv_filename[:4])
+        if years and (year not in years):
+            continue
+        current_year = current_year if current_year else year
         df = pd.read_csv(csv_filepath)
+        if year != current_year:  # csv's sorted by year
+            yield current_year, stats_by_year
+            current_year, stats_by_year = year, SDStats()
         for index, sample in df.iterrows():
-            stats_by_year[year].add(sample)
+            stats_by_year.add(sample)
         del df
-    return stats_by_year
+    if current_year:  # at least one record
+        yield current_year, stats_by_year
 
 
-def show_stats(stats):
-    for year, stats_by_year in stats.items():
-        print('-- {} --, unique models: {}'.format(year, stats_by_year.n_models))
-        for model_bucket in stats_by_year.most_unreliable(5):  # show 5 most unreliable models
-            print('  model: {}\tserial_numbers: {}\tfailures: {}'\
-                    .format(model_bucket.model, model_bucket.n_serial_numbers, model_bucket.n_failures))
+def show_stats(stats, year):
+    print('\n--- {} ---, unique models: {}'.format(year, stats.n_models))
+    for model_bucket in stats.most_unreliable(5):  # show 5 most unreliable models
+        print('  model: {:30}\tserial_numbers: {:8}\tfailures: {:10}'\
+                .format(model_bucket.model, model_bucket.n_serial_numbers, model_bucket.n_failures))
 
 
-def save_stats(stats, filepath):
+def save_stats(stats, filepath, year):
+    ext_idx = filepath.rfind('.')
+    ext_idx = len(filepath) if ext_idx == -1 else ext_idx
+    out_fp = ''.join([filepath[:ext_idx], '_', str(year), filepath[ext_idx:]])
     rows = []
-    for year, stats_by_year in stats.items():
-        for model, model_bucket in stats_by_year.model_buckets.items():
-            for serial_number, sn_obj in model_bucket.serial_numbers.items():
-                rows.append({
-                    'year': year,
-                    'model': model,
-                    'serial_number': serial_number,
-                    'first_time_seen': sn_obj.first_seen,
-                    'last_time_seen': sn_obj.last_seen,
-                    'failure': sn_obj.failure,
-                    'failure_date': sn_obj.failure_date
-                })
+    for model, model_bucket in stats.model_buckets.items():
+        for serial_number, sn_obj in model_bucket.serial_numbers.items():
+            rows.append({
+                'year': year,
+                'model': model,
+                'serial_number': serial_number,
+                'first_time_seen': sn_obj.first_seen,
+                'last_time_seen': sn_obj.last_seen,
+                'failure': sn_obj.failure,
+                'failure_date': sn_obj.failure_date
+            })
     df = pd.DataFrame(rows)
-    df.to_csv(filepath, index=False)
-    print('saved stats to {}'.format(filepath))
+    df.to_csv(out_fp, index=False)
+    print('saved stats to {}'.format(out_fp))
+    return out_fp
 
 
 def parse_arguments():
@@ -147,6 +156,7 @@ def parse_arguments():
     parser.add_argument('--dump', action='store_true')
     parser.add_argument('--stats_filepath', type=str, default=os.path.join('data', 'stats.csv'))
     parser.add_argument('--folder', type=str, default='data')
+    parser.add_argument('-y', '--year', type=int, action='append')
     return parser.parse_args()
 
 
@@ -158,8 +168,8 @@ def check_args(args):
 if __name__ == '__main__':
     args = parse_arguments()
     check_args(args)
-    stats = collect_stats(args.folder)
-    show_stats(stats)
-    if args.dump:
-        save_stats(stats, args.stats_filepath)
+    for year, stats in icollect_stats(args.folder, args.year):
+        show_stats(stats, year)
+        if args.dump:
+            save_stats(stats, args.stats_filepath, year)
 
