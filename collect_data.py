@@ -26,7 +26,7 @@ def get_dirs_with_years(folder):
         year = int(year)
         if not (MIN_YEAR < year < MAX_YEAR):
             continue
-        filtered_dirs.append(YearPath(year, os.path.join(folder, d)))
+        filtered_dirs.append(os.path.join(folder, d))
     filtered_dirs.sort()
     return filtered_dirs
 
@@ -46,8 +46,9 @@ def iget_next_file(folder, ext=None):
 
 def iget_next_csv(folder):
     years_directories = get_dirs_with_years(folder)  # sorted by year
+    years_directories = years_directories if years_directories else [folder]
     for year_path in years_directories:
-        yield from sorted(list(iget_next_file(year_path.path, '.csv')))
+        yield from sorted(list(iget_next_file(year_path, '.csv')))
 
 
 def convert_str2date(line):
@@ -65,7 +66,7 @@ def get_available_serial_numbers(stats_path, model, history, health_drives_count
 
     df = pd.read_csv(stats_path)
     df = df[(df.model == model) & (~df.failure | (df.failure_date == df.last_time_seen))]
-    df['lifetime_days'] = (df.last_time_seen.apply(convert_str2date) - df.first_time_seen(convert_str2date)).days + 1
+    df['lifetime_days'] = (df.last_time_seen.apply(convert_str2date) - df.first_time_seen.apply(convert_str2date)).apply(lambda x: x.days) + 1
     df = df[df.lifetime_days >= history]
     # all failured drives
     df_failured = df[df.failure]
@@ -116,7 +117,7 @@ def dump_data(in_path, out_path, failured_sns, healthy_sns):
         for _, csv_filepath in tqdm(iget_next_csv(in_path)):
             with open(csv_filepath) as inp_csv:
                 csv_reader = csv.DictReader(inp_csv)
-                for row in reader:
+                for row in csv_reader:
                     if csv_writer:
                         if not valid_row(row):
                             continue
