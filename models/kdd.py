@@ -1,12 +1,13 @@
-
-from collections import NamedTuple
+from collections import namedtuple
+import pandas as pd
+import numpy as np
 
 
 # Probability for change
-Prediction = NamedTuple('Prediction', ['probability', 'confidence'])
+Prediction = namedtuple('Prediction', ['probability', 'confidence'])
 
 
-class KDD(object):
+class KDD_Hardcoded(object):
     """
     Hardcoded model from https://www.kdd.org/kdd2016/papers/files/adf0849-botezatuA.pdf
     """
@@ -29,7 +30,7 @@ class KDD(object):
                 and metrics['smart_187_normalized'] < 100
                 and metrics['smart_240_raw'] < 14780 * 10**6):
             return Prediction(1, 0.97)
-        return HEALTHY_PREDICTION
+        return self.HEALTHY_PREDICTION
 
     def _hitachi_predict(self, metrics):
         if (metrics['smart_197_raw'] > 1 and metrics['smart_3_raw'] > 626):
@@ -43,15 +44,26 @@ class KDD(object):
         if (metrics['smart_197_raw'] < 1 and metrics['smart_5_raw'] < 7200
                 and metrics['smart_3_raw'] > 629 and 0 <= metrics['smart_1_raw'] <= 109):
             return Prediction(0, 0.97)
-        return HEALTHY_PREDICTION
+        return self.HEALTHY_PREDICTION
 
-    def predict(self, metrics):
-        model = metrics.get('model', None)
-        if model not in self._supported_models:
-            return UNC_PREDICTION
-        if model == 'Seagate':
+    def _predict(self, metrics):
+        vendor = metrics.get('vendor', 'Seagate')
+        if vendor and (vendor not in self._supported_models):
+            return self.UNC_PREDICTION
+        if vendor == 'Seagate':
             return self._seagate_predict(metrics)
-        elif model == 'Hitachi':
+        elif vendor == 'Hitachi':
             return self._hitachi_predict(metrics)
-        return UNC_PREDICTION
+        return self.UNC_PREDICTION
+
+    def _predict_pd(self, df):
+        predictions = []
+        for _, metrics in df.iterrows():
+            prob = self._predict(metrics).probability
+            predictions.append(prob)
+        return np.array(predictions)
+
+    def predict(self, df):
+        if isinstance(df, pd.DataFrame):
+            return self._predict_pd(df)
 
