@@ -60,9 +60,9 @@ def convert_date2str(d):
 
 
 def get_available_serial_numbers(stats_path, model, history, health_drives_count):
-    def add_days(date: str, days: int):
+    def remove_days(date: str, days: int):
         date = convert_str2date(date)
-        return convert_date2str(date + timedelta(days=days))
+        return convert_date2str(date - timedelta(days=days))
 
     df = pd.read_csv(stats_path)
     df = df[(df.model == model) & (~df.failure | (df.failure_date == df.last_time_seen))]
@@ -73,8 +73,8 @@ def get_available_serial_numbers(stats_path, model, history, health_drives_count
     df_healthy = df[~df.failure]
     # form failured serial numbers
     df_failured_serial_numbers = {
-        sn: (start_date, add_days(start_date, history))  # [) interval
-        for sn, start_date in df_failured[['serial_number', 'first_time_seen']].values
+        sn: (remove_days(last_date, history-1), remove_days(last_date, -1))  # [) interval
+        for sn, last_date in df_failured[['serial_number', 'last_time_seen']].values
     }
     df_failured_serial_numbers_count = len(df_failured_serial_numbers)
     # form healthy serial numbers
@@ -83,17 +83,25 @@ def get_available_serial_numbers(stats_path, model, history, health_drives_count
 
     def choose_start_date(obj):
         first_date, lifetime_days = convert_str2date(obj['first_time_seen']), obj['lifetime_days']
-        shift_in_days = random.randint(0, lifetime_days - history - 1)
+        shift_end = lifetime_days - history - 1
+        if shift_end < 0:
+            raise RuntimeError("Count of days is too small")
+        shift_in_days = random.randint(0, shift_end)
         return convert_date2str(first_date + timedelta(days=shift_in_days))
 
     def form_interval(row):
         start_date = choose_start_date(row)
-        end_date = add_days(start_date, history)
+        end_date = remove_days(start_date, -history)
         return start_date, end_date
 
-    df_healthy_serial_numbers = {
-            row['serial_number']: form_interval(row) for _, row in df_healthy.iterrows()
-    }
+    df_healthy_serial_numbers = {}
+    for _, row in df_healthy.iterrows():
+        try:
+            sn = row['serial_number']
+            df_healthy_serial_numbers[sn] = form_interval(row)
+        except RuntimeError:
+            pass
+
     return df_failured_serial_numbers, df_healthy_serial_numbers
 
 
@@ -109,9 +117,10 @@ def dump_data(in_path, out_path, failured_sns, healthy_sns):
         if serial_number not in sns:
             return False
         start, end = sns[serial_number]
-        return start <= row['date'] < end
+        return start <= row['date'] <= end
 
     header = None
+    count = 0
     with open(out_path, 'w') as out_csv:
         csv_writer = None
         for _, csv_filepath in tqdm(iget_next_csv(in_path)):
@@ -121,12 +130,14 @@ def dump_data(in_path, out_path, failured_sns, healthy_sns):
                     if csv_writer:
                         if not valid_row(row):
                             continue
+                        row['failure'] = int(row['serial_number'] in failured_sns)
                         csv_writer.writerow(row)
+                        count += 1
                         continue
                     header = row.keys()
                     csv_writer = csv.DictWriter(out_csv, fieldnames=header)
                     csv_writer.writeheader()
-    print('Dump data into: {}'.format(out_path))
+    print('Dump data into: {}, ({})'.format(out_path, count))
 
 
 def collect_data(in_path, stats_path, out_path, model, history, health_drives_count):
