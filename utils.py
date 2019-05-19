@@ -20,7 +20,8 @@ def FDR(y_true, y_pred):
     '''
     y_pred = (y_pred >= 0.5).astype(int)
     TP = ((y_true == 1) * (y_true == y_pred)).sum()
-    return TP / len(y_true)
+    FN = ((y_true == 1) * (y_true != y_pred)).sum()
+    return TP / (TP + FN)
 
 
 def FNR(y_true, y_pred):
