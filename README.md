@@ -1,6 +1,8 @@
 
 ## Hard drive failure prediction based on S.M.A.R.T. attributes
 
+Dataset url: https://www.kaggle.com/awant08/hard-drive-failure-prediction-st4000dm000#model_2018_ST4000DM000.csv
+
 ### Main goal of the research
 
 The purpose of this repository is:
@@ -53,7 +55,7 @@ Main metrics are FAR and FDR. These metrics are very popular in hard drive predi
 7. Predicting Disk Replacement towards Reliable Data Centers
 
 
-### Scripts
+# Scripts
 
 ## download_dataset.py
 
