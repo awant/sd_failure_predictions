@@ -51,3 +51,37 @@ Main metrics are FAR and FDR. These metrics are very popular in hard drive predi
 ### Articles analysis
 
 7. Predicting Disk Replacement towards Reliable Data Centers
+
+
+### Scripts
+
+## download_dataset.py
+
+Download dataset from external storages (BackBlaze only by now)
+
+Download selected years:
+
+```console
+python download_dataset.py --backblaze -y 2015 -y 2016 -y 2017 -y 2018
+```
+
+## collect_stats.py
+
+Collect stats (some key information) about every hd (serial number) like: 1) working days, 2) failure or not, etc.
+
+Downloaded dataset should be specified. An example:
+
+```console
+python collect_stats.py --dump --stats_filepath stats.csv --folder /data
+```
+
+## collect_data.py
+
+Collect data from dataset according to stats about specific model. After that there will be a .csv file with processed data.
+
+This script is used to choose data for training. Dump only specific dates before hd failure.
+
+```console
+python collect_data.py --model ST4000DM000 --path data/2018/ --stats stats_2018.csv
+```
+
