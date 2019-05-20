@@ -51,6 +51,10 @@ def iget_next_csv(folder):
         yield from sorted(list(iget_next_file(year_path, '.csv')))
 
 
+def get_all_csvs(folder):
+    return list(iget_next_csv(folder))
+
+
 def convert_str2date(line):
     return datetime.strptime(line, "%Y-%m-%d")
 
@@ -105,8 +109,9 @@ def get_available_serial_numbers(stats_path, model, history, health_drives_count
     return df_failured_serial_numbers, df_healthy_serial_numbers
 
 
-def set_out_path(model):
-    return 'model_{}.csv'.format(model)
+def set_out_path(model, year=None):
+    year = str(year)+'_' if year else ''
+    return 'model_{}{}.csv'.format(year, model)
 
 
 def dump_data(in_path, out_path, failured_sns, healthy_sns):
@@ -123,7 +128,8 @@ def dump_data(in_path, out_path, failured_sns, healthy_sns):
     count = 0
     with open(out_path, 'w') as out_csv:
         csv_writer = None
-        for _, csv_filepath in tqdm(iget_next_csv(in_path)):
+        # get_all_csvs instead of iget_next_csv to show a progress bar with %
+        for _, csv_filepath in tqdm(get_all_csvs(in_path), desc='Iterate through files in {}'.format(in_path)):
             with open(csv_filepath) as inp_csv:
                 csv_reader = csv.DictReader(inp_csv)
                 for row in csv_reader:
@@ -131,19 +137,20 @@ def dump_data(in_path, out_path, failured_sns, healthy_sns):
                         if not valid_row(row):
                             continue
                         row['failure'] = int(row['serial_number'] in failured_sns)
+                        # filter new columns
+                        row = {key: value for key, value in row.items() if key in header}
                         csv_writer.writerow(row)
                         count += 1
                         continue
                     header = row.keys()
                     csv_writer = csv.DictWriter(out_csv, fieldnames=header)
                     csv_writer.writeheader()
-    print('Dump data into: {}, ({})'.format(out_path, count))
+    print('Dump data into: {}, (size: {})'.format(out_path, count))
 
 
 def collect_data(in_path, stats_path, out_path, model, history, health_drives_count):
     if not os.path.isdir(in_path):
         RuntimeError('Input filepath should be folder, got: {}'.format(in_path))
-    out_path = set_out_path(model) if out_path is None else out_path
     failured_sns, healthy_sns = get_available_serial_numbers(stats_path, model, history, health_drives_count)
     dump_data(in_path, out_path, failured_sns, healthy_sns)
 
@@ -161,7 +168,13 @@ def parse_arguments():
 
 
 def check_args(args):
-    pass
+    # try to find a year in stats filepath in format: stats_2016.csv
+    try:
+        year = int(args.stats[-8:-4])
+    except ValueError:
+        year = None
+    out_path = set_out_path(args.model, year) if args.out is None else args.out
+    args.out = out_path
 
 
 if __name__ == '__main__':
