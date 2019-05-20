@@ -4,6 +4,7 @@
 5 most unreliable models (models with most failures count):
 
 --- 2015 ---, unique models: 78
+
 | model                   | serial_numbers | failures |
 |-------------------------|----------------|----------|
 | ST4000DM000             | 29670          | 585      |
@@ -13,6 +14,7 @@
 | WDC WD30EFRX            | 1209           | 78       |
 
 --- 2016 ---, unique models: 77
+
 | model                   | serial_numbers | failures |
 |-------------------------|----------------|----------|
 | ST4000DM000             | 35678          | 931      |
@@ -22,6 +24,7 @@
 | Hitachi HDS5C3030ALA630 | 4563           | 36       |
 
 --- 2017 ---, unique models: 68
+
 | model                | serial_numbers | failures |
 |----------------------|----------------|----------|
 | ST4000DM000          | 35189          | 1062     |
@@ -31,6 +34,7 @@
 | ST4000DX000          | 185            | 44       |
 
 --- 2018 ---, unique models: 61
+
 | model                | serial_numbers | failures |
 |----------------------|----------------|----------|
 | ST4000DM000          | 32164          | 579      |
