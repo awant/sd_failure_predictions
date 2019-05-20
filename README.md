@@ -79,9 +79,35 @@ python collect_stats.py --dump --stats_filepath stats.csv --folder /data
 
 Collect data from dataset according to stats about specific model. After that there will be a .csv file with processed data.
 
-This script is used to choose data for training. Dump only specific dates before hd failure.
+This script is used to choose data for training. Dump only specific dates before hd failure. (ST4000DM000 by default)
 
 ```console
 python collect_data.py --model ST4000DM000 --path data/2018/ --stats stats_2018.csv
+```
+
+## remove_nans.py
+
+After collecting a data you can remove NANs.
+'--replace' flag removes an original file.
+
+```console
+python remove_nans.py -csv model_2015_ST4000DM000.csv --replace
+```
+
+All in all, you can run these scripts together:
+
+```console
+python download_dataset.py --backblaze -y 2015 -y 2016 -y 2017 -y 2018
+python collect_stats.py --dump --stats_filepath stats.csv --folder data
+
+python collect_data.py --path data/2015 --stats stats_2015.csv
+python collect_data.py --path data/2016 --stats stats_2016.csv
+python collect_data.py --path data/2017 --stats stats_2017.csv
+python collect_data.py --path data/2018 --stats stats_2018.csv
+
+python remove_nans.py -csv model_2015_ST4000DM000.csv \
+                      -csv model_2016_ST4000DM000.csv \
+                      -csv model_2017_ST4000DM000.csv \
+                      -csv model_2018_ST4000DM000.csv
 ```
 
