@@ -10,6 +10,18 @@ Prediction = namedtuple('Prediction', ['probability', 'confidence'])
 class KDD_Hardcoded(object):
     """
     Hardcoded model from https://www.kdd.org/kdd2016/papers/files/adf0849-botezatuA.pdf
+    Used only these SMART atttributes:
+    Seagate:
+        smart_188_raw
+        smart_197_raw
+        smart_240_raw
+        smart_1_normalized
+        smart_187_normalized
+    Hitachi:
+        smart_1_raw
+        smart_3_raw
+        smart_5_raw
+        smart_197_raw
     """
     UNC_PREDICTION = Prediction(0, 0)
     HEALTHY_PREDICTION = Prediction(0, 1)
