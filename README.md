@@ -113,3 +113,19 @@ python remove_nans.py -csv model_2015_ST4000DM000.csv \
                       -csv model_2018_ST4000DM000.csv
 ```
 
+
+# Results
+
+Setting:
+1. ST4000DM000
+2. TRAIN DATASET: from 2015 to 2017
+3. TEST DATASET: 2018 (6130 health, 218 failured)
+
+| model         | FAR   | FDR   |
+|---------------|-------|-------|
+| KDD hardcoded | 0.041 | 0.463 |
+| RNN  Net      | 0.006 | 0.266 |
+| Dense Net 32  | 0.012 | 0.312 |
+| Dense Net 8   | 0.004 | 0.252 |
+| Dense Net 8,8 | 0.985 | 0.972 |
+
